@@ -1,10 +1,15 @@
 import React from 'react';
 import './App.css';
 
+import Layout from './Layout/Layout';
+import VotingBooth from './Containers/VotingBooth/VotingBooth';
+
 function App() {
   return (
     <div className="App">
-      <h1>Meal Voting Booth</h1>
+      <Layout>
+        <VotingBooth />
+      </Layout>
     </div>
   );
 }
