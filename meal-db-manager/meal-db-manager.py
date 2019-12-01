@@ -16,13 +16,16 @@ def hello_world():
     return 'Hello, World!'
 
 @app.route('/recipes/')
-def getRecipes(): 
-      
+def getRecipes():
+   
     tempFile = open(blue_apron_recipe_file,'r+')
     blue_apron_recipes = json.loads(tempFile.read())
     tempFile.close()
+
+    response = flask.jsonify(blue_apron_recipes)
+    response.headers.add('Access-Control-Allow-Origin', '*')    
     
-    return flask.jsonify(blue_apron_recipes)
+    return response
 
 @app.route('/polls/')
 def getPollData():
@@ -31,7 +34,10 @@ def getPollData():
     poll_data = json.loads(tempFile.read())
     tempFile.close()
 
-    return flask.jsonify(poll_data)
+    response = flask.jsonify(poll_data)
+    response.headers.add('Access-Control-Allow-Origin', '*')  
+
+    return response
 
 @app.route('/reset/', methods=['POST'])
 def resetPolls():
@@ -40,7 +46,10 @@ def resetPolls():
     tempFile.write(json.dumps( { "results" : [] } ))
     tempFile.close()
 
-    return "Polls Reset"
+    response = flask.jsonify( { "status" : "Success", "message" : "Polls Reset"} )
+    response.headers.add('Access-Control-Allow-Origin', '*') 
+
+    return response
 
 @app.route('/vote/', methods=['POST'])
 def vote():
@@ -55,7 +64,11 @@ def vote():
             
             for voter in poll_data['results']:
                 if (voter['name'] == user['name']):
-                    return("Already Voted")
+                    
+                    response = flask.jsonify( { "status" : "Fail", "message" : "Already Voted"} )
+                    response.headers.add('Access-Control-Allow-Origin', '*') 
+
+                    return response
             
             tempVoter = {
                 "name" : user["name"],
@@ -66,9 +79,19 @@ def vote():
             
             tempFile = open(poll_db_file,'w+')
             tempFile.write(json.dumps(poll_data))
-            tempFile.close()            
-            
-            return('Voted Successfully')
+            tempFile.close() 
+
+            response = flask.jsonify( { "status" : "Success", "message" : "Voted Successfully"} )
+            response.headers.add('Access-Control-Allow-Origin', '*') 
+
+            return response
+
+
+    response = flask.jsonify( { "status" : "Fail", "message" : "Incorrect Passphrase"} )
+    response.headers.add('Access-Control-Allow-Origin', '*') 
+
+    return response
+
 
 if __name__ == '__main__':
     app.run(debug=True,host='0.0.0.0')

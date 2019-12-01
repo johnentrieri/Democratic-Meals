@@ -7,9 +7,23 @@ const votingBallot = (props) => {
         )
     });
 
+    let voteAlert = null;
+    switch(props.voteStatus) {
+        case 'Success':
+            voteAlert = <div className="alert alert-success" role="alert">{props.voteMessage}</div>
+            break;
+        case 'Fail':
+            voteAlert = <div className="alert alert-danger" role="alert">{props.voteMessage}</div>
+            break;
+        default:
+            voteAlert = null;
+            break;
+    }
+
     return (
         <div className="container my-5 p-5 bg-light rounded border border-secondary shadow">
             <h3>Voting Ballot</h3>
+            {voteAlert}
             <div className="row my-5">
                 <div className="col-sm-4">
                     <select id="vote-1" className="custom-select my-2">
