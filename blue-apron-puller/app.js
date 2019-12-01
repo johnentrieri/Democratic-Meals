@@ -1,52 +1,104 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
+//Asynchronous Function so we can use 'await' with Puppeteer
 (async () => {
+
+    //Normal Puppeteer Front Matter
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
+    //Blue Apron Recipe Page
     await page.goto('https://www.blueapron.com/pages/sample-recipes');
 
+    //Go to Family (4-Serving) Tab
     await page.click('#Family-tab');
 
     const result = await page.evaluate(() => {
 
-        const data = [];
+        //Find the visible 'Weeks' displayed
         const weekCards = document.getElementsByClassName('week-content');
 
+        //Loop through each displayed Week
         for(let i=0 ; i<weekCards.length ; i++) {
             
+            //Scrape the 'Week of...' date string
             tempWeek = weekCards[i].querySelector('.week-header-content__date').innerText;
 
+            //Get Current Date & Time
             const currentDate = new Date();
+
+            //Formulate Date String out of 'Week of ...' string to create Date object
             const dateString = tempWeek.split(' ')[2] + " " + tempWeek.split(' ')[3].slice(0,-2) + ", " + currentDate.getFullYear();
             const deliveryDate = new Date(dateString);
         
+            //Determine number of days between current date and the Monday of the 'Week of ...' date
             const dateOffset = (deliveryDate - currentDate) / (1000*60*60*24);
 
+            //Cutoff is ~7 Days (Delivery Date is Monday, cutoff is Tuesday)
+            //Should be modified for different cutoffs, delivery dates, etc.
+
+            //If we are within the cutoff period, it is too late to modify that week's recipes - skip to the next loop iteration
             if (dateOffset < 7) { 
                 continue;
             };
 
+            //Create Object structure to return
             const tempWeekObj = { week: "", meals: [] };
+
+            //Set 'week' attribute to the dateString formulated above
             tempWeekObj.week = dateString;
 
+            //Scrape for each currently visible Recipe Card within this week
             const recipeCards = weekCards[i].querySelector('.Family .recipe-cards-3ds').getElementsByClassName('recipe-product-card__container');
+
+            //Loop through each recipe in a given week
             for(let j=0 ; j<recipeCards.length ; j++) {
+
+                //Create Meal Object structure
                 const tempMealObj = { title: "", subtitle: "", img: "" };
 
+                //Get Recipe Title
                 tempMealObj.title = recipeCards[j].querySelector('.recipe-content__title').innerText;
-                tempMealObj.subtitle = recipeCards[j].querySelector('.recipe-content__subtitle').innerText;
-                tempMealObj.img = recipeCards[j].querySelector('.recipe-image-tag').src;
 
+                //Get Recipe Subtitle
+                tempMealObj.subtitle = recipeCards[j].querySelector('.recipe-content__subtitle').innerText;
+
+                //Get Recipe Image URL
+                //Blue Apron Image URLs usually contain content after the .jpg (e.g. ...jpg?quality=1")
+                //Processing is here to cut the string off after '.jpg'
+                tempImgStr = recipeCards[j].querySelector('.recipe-image-tag').src
+                tempMealObj.img = tempImgStr.slice(0,tempImgStr.indexOf('.jpg') + '.jpg'.length);
+
+                //Push into Return Object
                 tempWeekObj.meals.push(tempMealObj);
             }
+
             return(tempWeekObj);
         }
     });
-    const json = JSON.stringify(result);
-    fs.writeFile('recipe-data.json', json, 'utf8', (error) => {
-        if (error) throw error;
-        console.log('Complete');
-    });
+
+    //Pull previously saved JSON file as string
+    const prevData = fs.readFileSync("recipe-data.json", "utf8");
+
+    //Convert newly scraped object into string
+    const newData = JSON.stringify(result);
+
+    //String comparison to see if anything has changed
+    if (prevData === newData) {
+
+        //Processing if nothing has changed since the last scrape
+        console.log("Equal");
+    } 
+    else {
+
+        //Processing if recipe data has changed since the last scrape
+        console.log("Not Equal");
+
+        //Write data to JSON file
+        fs.writeFile('recipe-data.json', newData, 'utf8', (error) => {
+            if (error) throw error;
+            console.log('Complete');
+        });
+    }    
 })();
