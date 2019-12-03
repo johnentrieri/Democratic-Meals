@@ -16,13 +16,13 @@ class VotingBooth extends Component {
     }
 
     componentDidMount() {
-        axios.get('http://localhost:5000/recipes/')
+        axios.get('http://192.168.1.44:5000/recipes/')
         .then( (response) => {
             const recipeData = response.data;
             this.setState({ week : recipeData.week, recipes : recipeData.meals });
         })
 
-        axios.get('http://localhost:5000/polls/')
+        axios.get('http://192.168.1.44:5000/polls/')
         .then( (response) => {
             const pollData = response.data.results;
             this.setState({ pollResults : pollData });
@@ -32,7 +32,7 @@ class VotingBooth extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if(prevState.voteStatus !== this.state.voteStatus) {
-            axios.get('http://localhost:5000/polls/')
+            axios.get('http://192.168.1.44:5000/polls/')
             .then( (response) => {
                 const pollData = response.data.results;
                 this.setState({ pollResults : pollData });
@@ -52,7 +52,7 @@ class VotingBooth extends Component {
 
         axios({
             method: 'post',
-            url: `http://localhost:5000/vote/`,
+            url: `http://192.168.1.197:44/vote/`,
             data: bodyFormData,
             headers: {'Content-Type': 'multipart/form-data' }
         })

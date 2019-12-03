@@ -3,8 +3,6 @@ const axios = require('axios');
 const querystring = require('querystring');
 const fs = require('fs');
 
-const siteURL = fs.readFileSync("../site-data.txt", "utf8");
-
 //Asynchronous Function so we can use 'await' with Puppeteer
 (async () => {
 
@@ -97,10 +95,10 @@ const siteURL = fs.readFileSync("../site-data.txt", "utf8");
         console.log("New Data Not Found");
 
         //Notify Admin - Site was scraped, no new recipes
-        axios.post('http://localhost:5000/notify/', querystring.stringify({
+        axios.post('http://192.168.1.44:5000/notify/', querystring.stringify({
             who : 'admin',
             subject: '[Democratic Meals] No New Recipes',
-            message: 'Blue Apron was scraped and no new recipes have been found.\n\n' + siteURL
+            message: 'Blue Apron was scraped and no new recipes have been found.'
         }))
         .then( (response) => {
             console.log("Admin Notified");
@@ -117,16 +115,16 @@ const siteURL = fs.readFileSync("../site-data.txt", "utf8");
         console.log("New Data Found");
 
         //Notify All Users - New recipes are available
-        axios.post('http://localhost:5000/notify/', querystring.stringify({
+        axios.post('http://192.168.1.44:5000/notify/', querystring.stringify({
             who : 'all',
             subject: '[Democratic Meals] New Recipes',
-            message: 'New recipes have been pulled from Blue Apron: ' + siteURL
+            message: 'New recipes have been pulled from Blue Apron: http://192.168.1.44:3000'
         }))
         .then( (response) => {
             console.log("Notifications Sent");
 
             //Reset Polls
-            return( axios.post('http://localhost:5000/reset/') );
+            return( axios.post('http://192.168.1.44:5000/reset/') );
         })
         .then( (response) => {
             console.log("Polls Reset");
