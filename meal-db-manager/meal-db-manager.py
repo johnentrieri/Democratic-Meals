@@ -101,6 +101,12 @@ def notify():
 
 @app.route('/reset/', methods=['POST'])
 def resetPolls():
+
+    recipient = user_data['admin']['email']
+    subject = "[Democratic Meals] Polls Have Been Reset"
+    message = "The Polls Have Been Reset"    
+
+    sendEmail(user_data['notify']['email'], user_data['notify']['password'],recipient,subject,message)
        
     tempFile = open(poll_db_file,'w+')
     tempFile.write(json.dumps( { "results" : [] } ))
@@ -134,6 +140,12 @@ def vote():
                 "name" : user["name"],
                 "votes" : [flask.request.form['v1'], flask.request.form['v2'], flask.request.form['v3']]
             }
+
+            recipient = user_data['admin']['email']
+            subject = "[Democratic Meals] User Voted"
+            message = "A User Has Voted"    
+
+            sendEmail(user_data['notify']['email'], user_data['notify']['password'],recipient,subject,message)
             
             poll_data['results'].append(tempVoter)
             

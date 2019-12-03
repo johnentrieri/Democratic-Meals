@@ -1,5 +1,9 @@
 const puppeteer = require('puppeteer');
+const axios = require('axios');
+const querystring = require('querystring');
 const fs = require('fs');
+
+const siteURL = fs.readFileSync("../site-data.txt", "utf8");
 
 //Asynchronous Function so we can use 'await' with Puppeteer
 (async () => {
@@ -81,6 +85,8 @@ const fs = require('fs');
     //Pull previously saved JSON file as string
     const prevData = fs.readFileSync("recipe-data.json", "utf8");
 
+    console.log(result);
+
     //Convert newly scraped object into string
     const newData = JSON.stringify(result);
 
@@ -88,17 +94,55 @@ const fs = require('fs');
     if (prevData === newData) {
 
         //Processing if nothing has changed since the last scrape
-        console.log("Equal");
+        console.log("New Data Not Found");
+
+        //Notify Admin - Site was scraped, no new recipes
+        axios.post('http://localhost:5000/notify/', querystring.stringify({
+            who : 'admin',
+            subject: '[Democratic Meals] No New Recipes',
+            message: 'Blue Apron was scraped and no new recipes have been found.\n\n' + siteURL
+        }))
+        .then( (response) => {
+            console.log("Admin Notified");
+
+            process.exit();
+        })
+        .catch( (error) => {
+            console.log(error);
+        });
     } 
     else {
 
         //Processing if recipe data has changed since the last scrape
-        console.log("Not Equal");
+        console.log("New Data Found");
 
-        //Write data to JSON file
-        fs.writeFile('recipe-data.json', newData, 'utf8', (error) => {
-            if (error) throw error;
-            console.log('Complete');
+        //Notify All Users - New recipes are available
+        axios.post('http://localhost:5000/notify/', querystring.stringify({
+            who : 'all',
+            subject: '[Democratic Meals] New Recipes',
+            message: 'New recipes have been pulled from Blue Apron: ' + siteURL
+        }))
+        .then( (response) => {
+            console.log("Notifications Sent");
+
+            //Reset Polls
+            return( axios.post('http://localhost:5000/reset/') );
+        })
+        .then( (response) => {
+            console.log("Polls Reset");
+
+            //Write data to JSON file
+            
+            fs.writeFileSync('recipe-data.json', newData, 'utf8', (error) => {
+                if (error) throw error;
+                console.log('Complete');
+            });
+
+            process.exit();
+            
+        })
+        .catch( (error) => {
+            console.log(error);
         });
-    }    
+    }   
 })();
