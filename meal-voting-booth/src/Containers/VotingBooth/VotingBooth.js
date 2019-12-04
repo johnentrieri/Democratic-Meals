@@ -52,7 +52,7 @@ class VotingBooth extends Component {
 
         axios({
             method: 'post',
-            url: `http://192.168.1.197:44/vote/`,
+            url: `http://192.168.1.44:5000/vote/`,
             data: bodyFormData,
             headers: {'Content-Type': 'multipart/form-data' }
         })
