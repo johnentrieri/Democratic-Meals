@@ -17,7 +17,7 @@ def sendEmail(senderEmail, senderPassword,recipient,subject,message):
     mailServer.starttls()
     mailServer.ehlo()
     mailServer.login(senderEmail, senderPassword)
-    mailServer.sendmail(senderEmail, recipient, msg.as_string())
+    mailServer.sendmail(senderEmail, recipient.split(','), msg.as_string())
     mailServer.close()  
 
 app = flask.Flask(__name__)
@@ -85,6 +85,7 @@ def notify():
             recipient += user['email']
             recipient += ","
 
+        recipient = recipient[:-1]
         sendEmail(user_data['notify']['email'], user_data['notify']['password'],recipient,subject,message)
 
         response = flask.jsonify( { "status" : "Success", "message" : "All Users Notified"} )
