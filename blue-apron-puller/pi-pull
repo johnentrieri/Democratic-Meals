@@ -1,0 +1,39 @@
+#!/bin/bash
+
+echo ""
+
+echo "Configuring Application for Rasperry Pi..."
+cp -v app.js app.js.windows
+cp -v app.js.pi app.js
+echo "Done"
+
+echo ""
+
+echo "Starting X Virtual Frame Buffer on Display :99..."
+Xvfb :99 &
+XVFB_PROC=$!
+echo $XVFB_PROC
+echo "Done"
+
+echo ""
+
+echo "Running Blue Apron Puller Script..."
+node app
+echo "Done"
+
+echo ""
+
+echo "Killing X Virtual Frame Buffer on Display :99..."
+kill $XVFB_PROC
+echo "Done"
+
+echo ""
+
+echo "Cleaning Up..."
+rm -vf app.js
+mv -v app.js.windows app.js
+echo "Done"
+
+echo ""
+
+echo "Script Complete"
