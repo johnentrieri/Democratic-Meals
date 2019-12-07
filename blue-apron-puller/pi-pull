@@ -3,6 +3,7 @@
 echo ""
 
 echo "Configuring Application for Rasperry Pi..."
+cd /home/pi/Democratic-Meals/blue-apron-puller
 cp -v app.js app.js.windows
 cp -v app.js.pi app.js
 echo "Done"

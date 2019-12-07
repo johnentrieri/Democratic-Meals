@@ -80,10 +80,22 @@ const fs = require('fs');
         }
     });
 
-    //Pull previously saved JSON file as string
-    const prevData = fs.readFileSync("recipe-data.json", "utf8");
+    //Recipe Data File Location
+    const recipeDataFile = './recipe-data.json';
 
-    console.log(result);
+    let prevData = "";
+
+    
+    if (fs.existsSync(recipeDataFile)) {
+
+        //Pull previously saved JSON file as string
+        prevData = fs.readFileSync(recipeDataFile, "utf8");
+
+    } else {
+
+        //No previous data found
+        prevData = "";
+    }
 
     //Convert newly scraped object into string
     const newData = JSON.stringify(result);
@@ -131,7 +143,7 @@ const fs = require('fs');
 
             //Write data to JSON file
             
-            fs.writeFileSync('recipe-data.json', newData, 'utf8', (error) => {
+            fs.writeFileSync(recipeDataFile, newData, 'utf8', (error) => {
                 if (error) throw error;
                 console.log('Complete');
             });

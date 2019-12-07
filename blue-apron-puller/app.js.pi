@@ -105,8 +105,6 @@ const fs = require('fs');
         prevData = "";
     }
 
-    console.log(result);
-
     //Convert newly scraped object into string
     const newData = JSON.stringify(result);
 
