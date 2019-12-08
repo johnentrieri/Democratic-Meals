@@ -3,6 +3,9 @@ const axios = require('axios');
 const querystring = require('querystring');
 const fs = require('fs');
 
+const API_URL = "http://192.168.1.44:5000";
+const SITE_URL = "http://192.168.1.44:3000";
+
 //Asynchronous Function so we can use 'await' with Puppeteer
 (async () => {
 
@@ -90,32 +93,35 @@ const fs = require('fs');
 
     //Recipe Data File Location
     const recipeDataFile = './recipe-data.json';
-
-    let prevData = "";
+    let prevDataWeek = "";
 
     
     if (fs.existsSync(recipeDataFile)) {
 
         //Pull previously saved JSON file as string
-        prevData = fs.readFileSync(recipeDataFile, "utf8");
+        prevDataWeek = JSON.parse(fs.readFileSync(recipeDataFile, "utf8")).week;
 
     } else {
 
         //No previous data found
-        prevData = "";
+        prevDataWeek = "";
     }
 
     //Convert newly scraped object into string
-    const newData = JSON.stringify(result);
+    const newDataWeek = result.week;
+
+    console.log("Previous Week: " + prevDataWeek);
+    console.log("New Week: " + newDataWeek);
+
 
     //String comparison to see if anything has changed
-    if (prevData === newData) {
+    if (prevDataWeek === newDataWeek) {
 
         //Processing if nothing has changed since the last scrape
         console.log("New Data Not Found");
 
         //Notify Admin - Site was scraped, no new recipes
-        axios.post('http://192.168.1.44:5000/notify/', querystring.stringify({
+        axios.post(API_URL + '/notify/', querystring.stringify({
             who : 'admin',
             subject: '[Democratic Meals] No New Recipes',
             message: 'Blue Apron was scraped and no new recipes have been found.'
@@ -135,23 +141,22 @@ const fs = require('fs');
         console.log("New Data Found");
 
         //Notify All Users - New recipes are available
-        axios.post('http://192.168.1.44:5000/notify/', querystring.stringify({
+        axios.post(API_URL + '/notify/', querystring.stringify({
             who : 'all',
             subject: '[Democratic Meals] New Recipes',
-            message: 'New recipes have been pulled from Blue Apron: http://192.168.1.44:3000'
+            message: 'New recipes have been pulled from Blue Apron: ' + SITE_URL
         }))
         .then( (response) => {
             console.log("Notifications Sent");
 
             //Reset Polls
-            return( axios.post('http://192.168.1.44:5000/reset/') );
+            return( axios.post(API_URL + '/reset/') );
         })
         .then( (response) => {
             console.log("Polls Reset");
 
-            //Write data to JSON file
-            
-            fs.writeFileSync(recipeDataFile, newData, 'utf8', (error) => {
+            //Write data to JSON file            
+            fs.writeFileSync(recipeDataFile, JSON.stringify(result), 'utf8', (error) => {
                 if (error) throw error;
                 console.log('Complete');
             });
