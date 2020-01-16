@@ -16,35 +16,41 @@ const SITE_URL = "http://192.168.1.44:3000";
     //Blue Apron Recipe Page
     await page.goto('https://www.blueapron.com/pages/sample-recipes');
 
-    //Go to Family (4-Serving) Tab
-    await page.click('#Family-tab');
-
+    //Evaluate JavaScript on page
     const result = await page.evaluate(() => {
 
-        //Find the visible 'Weeks' displayed
-        const weekCards = document.getElementsByClassName('week-content');
+        //Click 'Signature for Four' Tab
+        document.querySelectorAll('.MenuSelector-styles-module__button___1vIjh')[0].click();
+
+        //Get all 'Week' <div>'s
+        const weekSections = [];
+        const weekHeaders = document.querySelectorAll('.SampleRecipes-styles-module__weeklyHeader___SbQVc');
+        for (let i=0;i<weekHeaders.length;i++) {
+            weekSections.push(weekHeaders[i].parentNode);
+        }
 
         //Loop through each displayed Week
-        for(let i=0 ; i<weekCards.length ; i++) {
-            
-            //Scrape the 'Week of...' date string
-            tempWeek = weekCards[i].querySelector('.week-header-content__date').innerText;
+
+        for (let i=0;i<weekSections.length;i++) {
+
+            //Get MONTH DAY string
+            tempWeek = weekSections[i].querySelectorAll('.WeeklyHeader-styles-module__weekOfText___3EIxz')[1].innerText;
 
             //Get Current Date & Time
             const currentDate = new Date();
 
             //Formulate Date String out of 'Week of ...' string to create Date object
-            const dateString = tempWeek.split(' ')[2] + " " + tempWeek.split(' ')[3].slice(0,-2) + ", " + currentDate.getFullYear();
+            const dateString = tempWeek.split(' ')[0].slice(0,1) + tempWeek.split(' ')[0].slice(1).toLowerCase() + " " + tempWeek.split(' ')[1].slice(0,-2) + ", " + currentDate.getFullYear();
             const deliveryDate = new Date(dateString);
-        
+
             //Determine number of days between current date and the Monday of the 'Week of ...' date
             const dateOffset = (deliveryDate - currentDate) / (1000*60*60*24);
 
-            //Cutoff is ~7 Days (Delivery Date is Monday, cutoff is Tuesday)
+            //Cutoff is ~6 Days (Delivery Date is Monday, cutoff is Tuesday)
             //Should be modified for different cutoffs, delivery dates, etc.
 
-            //If we are within the cutoff period, it is too late to modify that week's recipes - skip to the next loop iteration
-            if (dateOffset < 7) { 
+            //If we are within the cutoff period, it is too late to modify that week's recipes - skip to the next loop iteration            
+            if (dateOffset < 6) { 
                 continue;
             };
 
@@ -55,7 +61,7 @@ const SITE_URL = "http://192.168.1.44:3000";
             tempWeekObj.week = dateString;
 
             //Scrape for each currently visible Recipe Card within this week
-            const recipeCards = weekCards[i].querySelector('.Family .recipe-cards-3ds').getElementsByClassName('recipe-product-card__container');
+            const recipeCards = weekSections[i].querySelectorAll('.FoodOfferingBoxes-styles-module__productCardWrapper___3qT_8');
 
             //Loop through each recipe in a given week
             for(let j=0 ; j<recipeCards.length ; j++) {
@@ -64,15 +70,16 @@ const SITE_URL = "http://192.168.1.44:3000";
                 const tempMealObj = { title: "", subtitle: "", img: "" };
 
                 //Get Recipe Title
-                tempMealObj.title = recipeCards[j].querySelector('.recipe-content__title').innerText;
+                tempMealObj.title = recipeCards[j].querySelectorAll('.pom-Product__Title p')[0].innerText
 
                 //Get Recipe Subtitle
-                tempMealObj.subtitle = recipeCards[j].querySelector('.recipe-content__subtitle').innerText;
+                tempMealObj.subtitle = recipeCards[j].querySelectorAll('.pom-Product__Title p')[1].innerText
 
                 //Get Recipe Image URL
+                tempImgStr = recipeCards[j].querySelector('.pom-Product__image').src;
+
                 //Blue Apron Image URLs usually contain content after the .jpg (e.g. ...jpg?quality=1")
                 //Processing is here to cut the string off after '.jpg'
-                tempImgStr = recipeCards[j].querySelector('.recipe-image-tag').src
                 tempMealObj.img = tempImgStr.slice(0,tempImgStr.indexOf('.jpg') + '.jpg'.length);
 
                 //Push into Return Object
@@ -80,7 +87,11 @@ const SITE_URL = "http://192.168.1.44:3000";
             }
 
             return(tempWeekObj);
-        }
+
+        }        
+
+        return(offsets);
+        //const rep = document.querySelectorAll('.pom-Product__Title')[0].innerText;
     });
 
     //Recipe Data File Location
@@ -159,5 +170,6 @@ const SITE_URL = "http://192.168.1.44:3000";
         .catch( (error) => {
             console.log(error);
         });
-    }   
+    }
+
 })();
