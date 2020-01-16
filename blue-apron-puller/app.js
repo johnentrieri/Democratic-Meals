@@ -20,7 +20,7 @@ const SITE_URL = "http://192.168.1.44:3000";
     const result = await page.evaluate(() => {
 
         //Click 'Signature for Four' Tab
-        document.querySelectorAll('.MenuSelector-styles-module__button___1vIjh')[0].click();
+        document.querySelectorAll('.MenuSelector-styles-module__button___1vIjh')[2].click();
 
         //Get all 'Week' <div>'s
         const weekSections = [];
