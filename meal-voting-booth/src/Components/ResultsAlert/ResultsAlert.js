@@ -18,7 +18,7 @@ const resultsAlert = (props) => {
         }
     }
 
-    if (total >= 9) {
+    if (props.isComp) {
 
         const userResults = props.results.map( (user,index) => {
             return(

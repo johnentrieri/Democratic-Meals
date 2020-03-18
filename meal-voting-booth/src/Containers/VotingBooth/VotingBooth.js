@@ -6,7 +6,7 @@ import RecipeViewer from '../../Components/RecipeViewer/RecipeViewer';
 import VotingBallot from '../../Components/VotingBallot/VotingBallot';
 import ResultsAlert from '../../Components/ResultsAlert/ResultsAlert';
 
-const API_URL = "http://192.168.1.197:5000";
+const API_URL = "http://192.168.1.44:5000";
 
 class VotingBooth extends Component {
     state = {
@@ -14,7 +14,8 @@ class VotingBooth extends Component {
         recipes: [],
         pollResults: [],
         voteStatus: "",
-        voteMessage: ""
+        voteMessage: "",
+        votingComplete: false,
     }
 
     componentDidMount() {
@@ -24,20 +25,28 @@ class VotingBooth extends Component {
             this.setState({ week : recipeData.week, recipes : recipeData.meals });
         })
 
-        axios.get(API_URL + '/polls/')
+        axios.get(API_URL + '/tally/')
         .then( (response) => {
-            const pollData = response.data.results;
-            this.setState({ pollResults : pollData });
+            if (response.data.isComplete === "Yes") {
+                const pollData = response.data.results;
+                this.setState( {votingComplete : true, pollResults : pollData} );
+            } else {
+                this.setState( {votingComplete : false, pollResults : []} );
+            }
         })
     }
 
 
     componentDidUpdate(prevProps, prevState) {
         if(prevState.voteStatus !== this.state.voteStatus) {
-            axios.get(API_URL + '/polls/')
+            axios.get(API_URL + '/tally/')
             .then( (response) => {
-                const pollData = response.data.results;
-                this.setState({ pollResults : pollData });
+                if (response.data.isComplete === "Yes") {
+                    const pollData = response.data.results;
+                    this.setState( {votingComplete : true, pollResults : pollData} );
+                } else {
+                    this.setState( {votingComplete : false, pollResults : []} );
+                }
             })
         }
     }
@@ -69,7 +78,7 @@ class VotingBooth extends Component {
         return (
             <div>
                 <WeekBanner week={this.state.week} />
-                <ResultsAlert results={this.state.pollResults} recipes={this.state.recipes}/>
+                <ResultsAlert results={this.state.pollResults} recipes={this.state.recipes} isComp={this.state.votingComplete}/>
                 <RecipeViewer recipes={this.state.recipes} />
                 <VotingBallot
                     recipes={this.state.recipes}
