@@ -46,18 +46,6 @@ def getRecipes():
     
     return response
 
-@app.route('/polls/')
-def getPollData():
-       
-    tempFile = open(poll_db_file,'r+')
-    poll_data = json.loads(tempFile.read())
-    tempFile.close()
-
-    response = flask.jsonify(poll_data)
-    response.headers.add('Access-Control-Allow-Origin', '*')  
-
-    return response
-
 @app.route('/notify/', methods=['POST'])
 def notify():
 
@@ -99,6 +87,56 @@ def notify():
 
         return response
 
+@app.route('/users/', methods=['GET'])
+def getUsers():
+
+    tempFile = open(user_db_file,'r+')
+    user_data = json.loads(tempFile.read())
+    tempFile.close()
+
+    user_list = []
+
+    for user in user_data['users']:
+        user_list.append(user['name'])
+
+    response = flask.jsonify( { "users" : user_list } )
+    response.headers.add('Access-Control-Allow-Origin', '*') 
+
+    return response
+
+@app.route('/tally/', methods=['GET'])
+def tallyPolls():
+
+    tempFile = open(user_db_file,'r+')
+    user_data = json.loads(tempFile.read())
+    tempFile.close()
+
+    tempFile = open(poll_db_file,'r+')
+    poll_data = json.loads(tempFile.read())
+    tempFile.close()
+
+    num_users = len(user_data['users'])
+    num_votes = len(poll_data['results'])
+
+    if (num_votes < num_users):
+        response = flask.jsonify( 
+            { 
+                "isComplete" : "No",
+                "userCount" : num_users, 
+                "votes" : num_votes
+            } 
+        )
+    else:
+        response = flask.jsonify( 
+            { 
+                "isComplete" : "Yes",
+                "results" : poll_data['results']
+            } 
+        )
+
+    response.headers.add('Access-Control-Allow-Origin', '*') 
+
+    return response
 
 @app.route('/reset/', methods=['POST'])
 def resetPolls():
